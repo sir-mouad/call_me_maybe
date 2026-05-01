@@ -16,7 +16,7 @@ class TypeInfo(BaseModel):
     type: str = Field(min_length=1)
 
 
-class FunctionDefinition(BaseModel):
+class RequestDif(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(min_length=1)
@@ -40,11 +40,11 @@ def check_parce_input(data: list[dict]) -> list[str]:
     return prompts
 
     
-def check_parce_diff(data: list[dict]) -> list[FunctionDefinition]:
+def check_parce_diff(data: list[dict]) -> list[RequestDif]:
     functions = []
 
     for item in data:
-        validated = FunctionDefinition.model_validate(item)
+        validated = RequestDif.model_validate(item)
         functions.append(validated)
 
     return functions
