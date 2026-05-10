@@ -1,3 +1,3 @@
 from src import parce
 
-parce.main()
+parce.get_and_check_inputs()
