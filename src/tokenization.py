@@ -1,37 +1,49 @@
 from llm_sdk import Small_LLM_Model
 import json
-from .parse import get_and_check_inputs
+from src.parse import load_json
 
 
-def prompts_to_tokens_id():
-    model = Small_LLM_Model()
-    prompts, _ = get_and_check_inputs()
-    tokens_id = []
-    for p in prompts:
-        tokens_id.append(model.encode(p).flatten().tolist())
-    return tokens_id
-        
-# prompt = "What is the square root of 16?"
+def get_full_prompt(functions, prompt, msg=""):
+    # model = Small_LLM_Model()
+    full_prompt = ("You are a function-calling assistant.\n"
+                   "Your job is to select the correct function and extract"
+                   " the correct arguments from the user request.\n"
+                   "Available functions:\n")
+    for func in functions:
+        param = ", ".join(f"{k} ({v})" for k, v in func.parameters.items())
+        full_prompt += (f"- {func.name}: {func.description}. | params: "f"{param}\n")
+    full_prompt += f"User request: {prompt}\n{msg}"
+    return (full_prompt)
 
-# model = Small_LLM_Model()
-# tokens_id = model.encode(prompt)
-# # lest = tokens_id.tolist()
-# # print(tokens_id)
-# # print(model.decode(tokens_id))
-# tokens_id = tokens_id.flatten().tolist()
-# logits = model.get_logits_from_input_ids(tokens_id)
-# # print(type(logits))
-# # print(model.decode(logits))
-# # token_id = logits.max().item() 
 
-# # token_id = logits.index()
-# # print(token_id)
-# # print(model.decode([token_id]))
+def tokenize(model, text):
+    return model.encode(text).flatten().tolist()
 
-# # token_id = 151508
-# # print(token_id, model.decode([token_id]))
-# path = model.get_path_to_vocab_file()
-# with open(path, "r") as f:
-#     vocab = json.load(f)
-# id_to_token = {v: k for k, v in vocab.items()}
-# print((id_to_token[1542]))
+def load_vocab(model):
+    return load_json(model.get_path_to_vocabulary_json())
+
+
+# You are a function-calling assistant.
+# Your job is to select the correct function and extract the correct arguments from the user request.
+
+# Available functions:
+# - fn_add_numbers: Add two numbers together and return their sum. | params: a (number), b (number)
+# - fn_greet: Generate a greeting message for a person by name. | params: name (string)
+# - fn_reverse_string: Reverse a string and return the reversed result. | params: s (string)
+
+# User request: What is the sum of 2 and 3?
+
+# Selected function:
+# ----------------------------------------------------------------------------------
+# You are a function-calling assistant.
+# Your job is to select the correct function and extract the correct arguments from the user request.
+
+# Available functions:
+# - fn_add_numbers: Add two numbers together and return their sum. | params: a (number), b (number)
+# - fn_greet: Generate a greeting message for a person by name. | params: name (string)
+# - fn_reverse_string: Reverse a string and return the reversed result. | params: s (string)
+
+# User request: What is the sum of 2 and 3?
+# Selected function: fn_add_numbers
+
+# Value of parameter 'a' (number)

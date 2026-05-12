@@ -2,7 +2,7 @@ import sys
 import argparse
 import json
 from typing import Any
-from pydantic import BaseModel, Field, ValidationError, ConfigDict
+from pydantic import BaseModel, Field, ValidationError, ConfigDict, model_validator, field_validator
 
 
 class RequestInput(BaseModel):
@@ -10,17 +10,36 @@ class RequestInput(BaseModel):
     prompt: str = Field(min_length=1)
 
 
-class TypeInfo(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    type: str = Field(min_length=1)
+SUPPORTED_TYPES = {"number", "string", "boolean"}
 
 
 class FunctionDefinition(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    parameters: dict[str, TypeInfo]
-    returns: TypeInfo
+    parameters: dict[str, str]
+    returns: str
+
+    @field_validator("parameters")
+    @classmethod
+    def check_types(cls, params):
+        for name, t in params.items():
+            if t not in SUPPORTED_TYPES:
+                raise ValueError(
+                    f"unsupported type '{t}' for parameter '{name}'")
+        return params
+
+    @model_validator(mode="before")
+    @classmethod
+    def flatten(cls, data: Any) -> Any:
+        """Flatten {"a": {"type": "number"}} -> {"a": "number"}."""
+        if isinstance(data.get("parameters"), dict):
+            data["parameters"] = {
+                k: v["type"] for k, v in data["parameters"].items()
+            }
+        if isinstance(data.get("returns"), dict):
+            data["returns"] = data["returns"]["type"]
+        return data
 
 
 def load_json(path: str) -> Any:
@@ -36,69 +55,75 @@ def load_json(path: str) -> Any:
         return json.load(f)
 
 
-def check_parse_input(data: Any) -> list[str]:
-    """Validate and extract prompts from input data.
+def parse_prompts(data: Any) -> list[str]:
+    """Validate and extract prompts from raw JSON data.
 
     Args:
         data: Raw parsed JSON input.
 
     Returns:
         List of validated prompt strings.
+
+    Raises:
+        ValueError: If data is not a list.
     """
     if not isinstance(data, list):
-        print("error: input file must be a JSON array")
-        sys.exit(1)
-    prompts = []
-    for item in data:
-        validated = RequestInput.model_validate(item)
-        prompts.append(validated.prompt)
-    return prompts
+        raise ValueError("input file must be a JSON array")
+    return [RequestInput.model_validate(item).prompt for item in data]
 
 
-def check_parse_functions(data: Any) -> list[FunctionDefinition]:
-    """Validate and extract function definitions from input data.
+def parse_functions(data: Any) -> list[FunctionDefinition]:
+    """Validate and extract function definitions from raw JSON data.
 
     Args:
         data: Raw parsed JSON input.
 
     Returns:
         List of validated FunctionDefinition objects.
+
+    Raises:
+        ValueError: If data is not a list.
     """
     if not isinstance(data, list):
-        print("error: functions definition file must be a JSON array")
-        sys.exit(1)
-    functions = []
-    for item in data:
-        validated = FunctionDefinition.model_validate(item)
-        functions.append(validated)
-    return functions  
+        raise ValueError("functions definition file must be a JSON array")
+    return [FunctionDefinition.model_validate(item) for item in data]
 
-def get_and_check_inputs() -> None:
-    """Entry point for the function calling tool."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
+
+def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
+    """Parse CLI args, load and validate input files.
+
+    Returns:
+        A tuple of (prompts, functions, output_path).
+    """
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
         "--functions_definition",
         default="data/input/functions_definition.json"
     )
-    parser.add_argument("--input", default="data/input/function_calling_tests.json")
-    parser.add_argument("--output", default="data/output/function_calling_results.json")
-    args = parser.parse_args()
+    arg_parser.add_argument(
+        "--input", default="data/input/function_calling_tests.json")
+    arg_parser.add_argument(
+        "--output", default="data/output/function_calling_results.json")
+    args = arg_parser.parse_args()
 
     try:
-        data_input = load_json(args.input)
-        data_diff = load_json(args.functions_definition)
-        prompts = check_parse_input(data_input)
-        functions = check_parse_functions(data_diff)
-        return prompts, functions
+        prompts = parse_prompts(load_json(args.input))
+        functions = parse_functions(load_json(args.functions_definition))
+        # print(str(functions[0].parameters.keys()))
+        return prompts, functions, args.output
     except FileNotFoundError as error:
         print(f"file not found: {error}")
         sys.exit(1)
     except json.JSONDecodeError as error:
         print(f"invalid json: {error}")
         sys.exit(1)
+    except ValueError as error:
+        print(f"error: {error}")
+        sys.exit(1)
     except ValidationError as error:
         for e in error.errors():
-            print(f"validation error at {e['loc']}: {e['msg']}")
+            loc = " -> ".join(str(l) for l in e["loc"])
+            print(f"validation error at {loc}: {e['msg']}")
         sys.exit(1)
 
 
