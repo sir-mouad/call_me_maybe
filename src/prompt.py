@@ -1,5 +1,4 @@
 def get_full_prompt(functions, prompt, msg=""):
-    # model = Small_LLM_Model()
     full_prompt = ("You are a function-calling assistant.\n"
                    "Your job is to select the correct function and extract"
                    " the correct arguments from the user request.\n"
