@@ -109,7 +109,6 @@ def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
     try:
         prompts = parse_prompts(load_json(args.input))
         functions = parse_functions(load_json(args.functions_definition))
-        # print(str(functions[0].parameters.keys()))
         return prompts, functions, args.output
     except FileNotFoundError as error:
         print(f"file not found: {error}")

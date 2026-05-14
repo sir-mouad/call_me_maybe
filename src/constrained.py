@@ -57,8 +57,6 @@ def pick_string(model, prompt_ids, all_token_ids):
 def pick_value(model, prompt_ids, param_type, number_tokens, all_token_ids):
     if param_type == "number":
         return round(float(pick_number(model, prompt_ids, number_tokens)), 6)
-    elif param_type == "integer":
-        return int(float(pick_number(model, prompt_ids, number_tokens)))
     elif param_type == "string":
         return (pick_string(model, prompt_ids, all_token_ids))
     elif param_type == "boolean":
