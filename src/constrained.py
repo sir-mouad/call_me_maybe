@@ -50,9 +50,9 @@ def pick_string(model, prompt_ids, all_token_ids):
         generated.append(next_token)
         current = model.decode(generated)
         if current.endswith('"'):
-            return current.split('\n')[0].strip().rstrip('"')
-        if len(generated) > 50:  # safe
-            return current.strip('"')
+            return current.rstrip('"').strip()
+        if '"' in current:
+            return current.split('"')[0].strip()
 
 def pick_value(model, prompt_ids, param_type, number_tokens, all_token_ids):
     if param_type == "number":
