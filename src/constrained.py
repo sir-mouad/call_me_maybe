@@ -40,7 +40,7 @@ def pick_number(model, prompt_ids, number_tokens):
         except ValueError:
             generated.pop()
             return model.decode(generated)
-        
+
 
 def pick_string(model, prompt_ids, all_token_ids):
     generated = []
@@ -53,6 +53,7 @@ def pick_string(model, prompt_ids, all_token_ids):
             return current.rstrip('"').strip()
         if '"' in current:
             return current.split('"')[0].strip()
+
 
 def pick_value(model, prompt_ids, param_type, number_tokens, all_token_ids):
     if param_type == "number":

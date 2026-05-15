@@ -2,7 +2,14 @@ import sys
 import argparse
 import json
 from typing import Any
-from pydantic import BaseModel, Field, ValidationError, ConfigDict, model_validator, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationError,
+    ConfigDict,
+    model_validator,
+    field_validator
+)
 
 
 class RequestInput(BaseModel):
@@ -103,7 +110,7 @@ def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
     arg_parser.add_argument(
         "--input", default="data/input/function_calling_tests.json")
     arg_parser.add_argument(
-        "--output", default="data/output/function_calling_results.json")
+        "--output", default="data/output/function_calls.json")
     args = arg_parser.parse_args()
 
     try:
@@ -121,7 +128,7 @@ def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
         sys.exit(1)
     except ValidationError as error:
         for e in error.errors():
-            loc = " -> ".join(str(l) for l in e["loc"])
+            loc = " -> ".join(str(le) for le in e["loc"])
             print(f"validation error at {loc}: {e['msg']}")
         sys.exit(1)
 

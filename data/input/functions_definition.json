@@ -67,5 +67,20 @@
     "returns": {
       "type": "string"
     }
+  },
+  {
+  "name": "fn_set_active",
+  "description": "Set the active state of a user.",
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean"
+    }
+  },
+  "returns": {
+    "type": "boolean"
   }
+}
 ]

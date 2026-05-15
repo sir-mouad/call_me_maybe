@@ -1,5 +1,5 @@
 from llm_sdk import Small_LLM_Model
-from src.parse import get_and_check_inputs, FunctionDefinition, load_json
+from src.parse import get_and_check_inputs, load_json
 from src.prompt import get_full_prompt
 from src.constrained import pick_from_options, pick_value
 import json
