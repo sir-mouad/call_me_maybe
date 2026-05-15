@@ -1,11 +1,12 @@
 install:
+		UV_CACHE_DIR=/goinfre/mhadir/.cache_uv
 		uv sync
 run:
 	uv run python -m src
 
-# debug:
-#     uv run python -m pdp src
-
+debug:
+	uv run python -m pdb -m src
+	
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	rm -rf .mypy_cache	
