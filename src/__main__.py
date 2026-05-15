@@ -11,7 +11,8 @@ def main():
     prompts, functions, output_path = get_and_check_inputs()
     vocab = load_json(model.get_path_to_vocab_file())
     all_token_ids = set(vocab.values())
-    number_tokens = {v for k, v in vocab.items() if k.strip() in "0123456789.-"}
+    number_tokens = {v for k, v in vocab.items() if k.strip()
+                     in "0123456789.-"}
     encoded_functions = {
         func.name: model.encode(func.name).flatten().tolist()
         for func in functions
@@ -29,7 +30,10 @@ def main():
             for k, v in value.items():
                 msg += f"Value of parameter '{k}': {v}\n"
             p_type = func.parameters[param]
-            msg += f"Value of parameter '{param}' ({p_type}): \""
+            if p_type == "string":
+                msg += f"Value of parameter '{param}' ({p_type}): \""
+            else:
+                msg += f"Value of parameter '{param}' ({p_type}): "
             prompt_ids = model.encode(get_full_prompt(
                 functions, prompt, msg)).flatten().tolist()
             value[param] = pick_value(

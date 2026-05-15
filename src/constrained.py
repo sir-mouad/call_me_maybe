@@ -34,7 +34,7 @@ def pick_number(model, prompt_ids, number_tokens):
         next_token = mask_and_pick(logits, number_tokens)
         generated.append(next_token)
         if len(generated) > 20:
-            return model.decode(generated)
+            return (model.decode(generated))
         try:
             float(model.decode(generated))
         except ValueError:
