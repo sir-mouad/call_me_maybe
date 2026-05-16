@@ -17,7 +17,7 @@ class RequestInput(BaseModel):
     prompt: str = Field(min_length=1)
 
 
-SUPPORTED_TYPES = {"number", "string", "boolean"}
+SUPPORTED_TYPES = {"number", "string", "boolean", "integer"}
 
 
 class FunctionDefinition(BaseModel):
