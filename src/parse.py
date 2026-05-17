@@ -13,14 +13,18 @@ from pydantic import (
 
 
 class RequestInput(BaseModel):
+    """Pydantic model for validating a single input prompt."""
+
     model_config = ConfigDict(extra="forbid")
     prompt: str = Field(min_length=1)
 
 
-SUPPORTED_TYPES = {"number", "string", "boolean", "integer"}
+SUPPORTED_TYPES: set[str] = {"number", "string", "boolean", "integer"}
 
 
 class FunctionDefinition(BaseModel):
+    """Pydantic model for validating a function definition."""
+
     model_config = ConfigDict(extra="ignore")
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
@@ -29,7 +33,18 @@ class FunctionDefinition(BaseModel):
 
     @field_validator("parameters")
     @classmethod
-    def check_types(cls, params):
+    def check_types(cls, params: dict[str, str]) -> dict[str, str]:
+        """Validate that all parameter types are supported.
+
+        Args:
+            params: Dict of parameter names to their types.
+
+        Returns:
+            The validated parameters dict.
+
+        Raises:
+            ValueError: If an unsupported type is found.
+        """
         for name, t in params.items():
             if t not in SUPPORTED_TYPES:
                 raise ValueError(
@@ -39,7 +54,14 @@ class FunctionDefinition(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def flatten(cls, data: Any) -> Any:
-        """Flatten {"a": {"type": "number"}} -> {"a": "number"}."""
+        """Flatten nested type dicts into plain strings.
+
+        Args:
+            data: Raw input data before validation.
+
+        Returns:
+            Flattened data with string types.
+        """
         if isinstance(data.get("parameters"), dict):
             data["parameters"] = {
                 k: v["type"] for k, v in data["parameters"].items()
@@ -118,18 +140,17 @@ def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
         functions = parse_functions(load_json(args.functions_definition))
         return prompts, functions, args.output
     except FileNotFoundError as error:
-        print(f"file not found: {error}")
+        print(f"error: file not found: {error.filename}")
         sys.exit(1)
     except json.JSONDecodeError as error:
-        print(f"invalid json: {error}")
+        print(f"error: invalid json: {error.msg}")
         sys.exit(1)
     except ValueError as error:
         print(f"error: {error}")
         sys.exit(1)
     except ValidationError as error:
         for e in error.errors():
-            loc = " -> ".join(str(le) for le in e["loc"])
-            print(f"validation error at {loc}: {e['msg']}")
+            print(f"error: {e['msg']}")
         sys.exit(1)
 
 
