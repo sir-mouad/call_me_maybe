@@ -20,13 +20,15 @@ def main() -> None:
 
     vocab: dict[str, int] = load_json(model.get_path_to_vocab_file())
     all_token_ids: set[int] = set(vocab.values())
-    number_tokens: set[int] = {
-        v for k, v in vocab.items() if k.strip() in "0123456789.-"
-    }
-    encoded_functions: dict[str, list[int]] = {
-        func.name: model.encode(func.name).flatten().tolist()
-        for func in functions
-    }
+    number_tokens: set[int] = set()
+    for k, v in vocab.items():
+        if k.strip() in "0123456789.-":
+            number_tokens.add(v)
+
+    encoded_functions: dict[str, list[int]] = {}
+    for func in functions:
+        encoded = model.encode(func.name).flatten().tolist()
+        encoded_functions[func.name] = encoded
 
     results: list[dict[str, object]] = []
     for prompt in prompts:
@@ -34,8 +36,11 @@ def main() -> None:
         prompt_ids: list[int] = model.encode(
             get_full_prompt(functions, prompt, msg)).flatten().tolist()
         fn_name: str = pick_from_options(model, prompt_ids, encoded_functions)
-        func: FunctionDefinition = next(
-            f for f in functions if f.name == fn_name)
+        func: FunctionDefinition = None
+        for f in functions:
+            if f.name == fn_name:
+                func = f
+                break
         value: dict[str, float | int | str | bool] = {}
         for param in func.parameters:
             msg = f"Selected function: {fn_name}\n"

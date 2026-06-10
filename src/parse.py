@@ -6,7 +6,6 @@ from pydantic import (
     BaseModel,
     Field,
     ValidationError,
-    ConfigDict,
     model_validator,
     field_validator
 )
@@ -15,7 +14,6 @@ from pydantic import (
 class RequestInput(BaseModel):
     """Pydantic model for validating a single input prompt."""
 
-    model_config = ConfigDict(extra="forbid")
     prompt: str = Field(min_length=1)
 
 
@@ -25,7 +23,6 @@ SUPPORTED_TYPES: set[str] = {"number", "string", "boolean", "integer"}
 class FunctionDefinition(BaseModel):
     """Pydantic model for validating a function definition."""
 
-    model_config = ConfigDict(extra="ignore")
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
     parameters: dict[str, str]
@@ -53,25 +50,27 @@ class FunctionDefinition(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def flatten(cls, data: Any) -> Any:
-        """Flatten nested type dicts into plain strings.
+    def normalize(cls, data: Any) -> Any:
+        """normalize nested type dicts into plain strings.
 
         Args:
             data: Raw input data before validation.
 
         Returns:
-            Flattened data with string types.
+            normalizeed data with string types.
         """
         if isinstance(data.get("parameters"), dict):
-            data["parameters"] = {
-                k: v["type"] for k, v in data["parameters"].items()
-            }
+            parameters = {}
+            for k, v in data["parameters"].items():
+                parameters[k] = v["type"]
+
+            data["parameters"] = parameters
         if isinstance(data.get("returns"), dict):
             data["returns"] = data["returns"]["type"]
         return data
 
 
-def load_json(path: str) -> Any:
+def load_json(path: str) -> list:
     """Load and return parsed JSON from a file.
 
     Args:
@@ -84,7 +83,7 @@ def load_json(path: str) -> Any:
         return json.load(f)
 
 
-def parse_prompts(data: Any) -> list[str]:
+def parse_prompts(data: list) -> list[str]:
     """Validate and extract prompts from raw JSON data.
 
     Args:
@@ -98,10 +97,16 @@ def parse_prompts(data: Any) -> list[str]:
     """
     if not isinstance(data, list):
         raise ValueError("input file must be a JSON array")
-    return [RequestInput.model_validate(item).prompt for item in data]
+    result = []
+    for item in data:
+        obj = RequestInput.model_validate(item)
+        result.append(obj.prompt)
+
+    return result
 
 
-def parse_functions(data: Any) -> list[FunctionDefinition]:
+
+def parse_functions(data: list) -> list[FunctionDefinition]:
     """Validate and extract function definitions from raw JSON data.
 
     Args:
@@ -114,8 +119,12 @@ def parse_functions(data: Any) -> list[FunctionDefinition]:
         ValueError: If data is not a list.
     """
     if not isinstance(data, list):
-        raise ValueError("functions definition file must be a JSON array")
-    return [FunctionDefinition.model_validate(item) for item in data]
+        raise ValueError("functions definition file must be a JSON array")  
+    result = []
+    for item in data:
+        result.append(FunctionDefinition.model_validate(item))
+
+    return result
 
 
 def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:

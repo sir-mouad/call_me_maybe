@@ -26,11 +26,12 @@ def get_full_prompt(
         "Available functions:\n"
     )
     for func in functions:
-        param: str = ", ".join(
-            f"{k} ({v})" for k, v in func.parameters.items()
-        )
-        full_prompt += (
-            f"- {func.name}: {func.description}. | params: {param}\n"
-        )
+        param_parts = []
+        for k, v in func.parameters.items():
+            param_parts.append(f"{k} ({v})")
+        param = ", ".join(param_parts)
+        full_prompt += "- " + func.name + ": " + \
+            func.description + " | params: " + param + "\n"
+
     full_prompt += f"User request: {prompt}\n{msg}"
     return full_prompt

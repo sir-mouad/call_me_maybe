@@ -1,5 +1,4 @@
 install:
-		UV_CACHE_DIR=/goinfre/mhadir/.cache_uv
 		uv sync
 run:
 	uv run python -m src
