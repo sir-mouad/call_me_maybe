@@ -12,18 +12,20 @@ def main() -> None:
     Loads the model, parses inputs, runs constrained decoding for each prompt,
     and writes the results to the output file.
     """
-    model: Small_LLM_Model = Small_LLM_Model()
     prompts: list[str]
     functions: list[FunctionDefinition]
     output_path: str
     prompts, functions, output_path = get_and_check_inputs()
+    model: Small_LLM_Model = Small_LLM_Model()
 
     vocab: dict[str, int] = load_json(model.get_path_to_vocab_file())
     all_token_ids: set[int] = set(vocab.values())
     number_tokens: set[int] = set()
+
     for k, v in vocab.items():
         if k.strip() in "0123456789.-":
             number_tokens.add(v)
+    print(number_tokens)
 
     encoded_functions: dict[str, list[int]] = {}
     for func in functions:
