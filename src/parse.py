@@ -3,9 +3,10 @@ import argparse
 import json
 from pydantic import ValidationError
 from src.pydantic_model import RequestInput, FunctionDefinition
+from typing import Any
 
 
-def load_json(path: str) -> list:
+def load_json(path: str) -> Any:
     """Load and return parsed JSON from a file.
 
     Args:
@@ -18,7 +19,7 @@ def load_json(path: str) -> list:
         return json.load(f)
 
 
-def parse_prompts(data: list) -> list[str]:
+def parse_prompts(data: list[Any]) -> list[str]:
     """Validate and extract prompts from raw JSON data.
 
     Args:
@@ -39,7 +40,7 @@ def parse_prompts(data: list) -> list[str]:
     return result
 
 
-def parse_functions(data: list) -> list[FunctionDefinition]:
+def parse_functions(data: list[Any]) -> list[FunctionDefinition]:
     """Validate and extract function definitions from raw JSON data.
 
     Args:
@@ -85,10 +86,6 @@ def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
         sys.exit(1)
     except json.JSONDecodeError as error:
         print(f"error: invalid json: {error.msg}")
-        sys.exit(1)
-    except ValueError as error:
-        print(f"error: {error.errors()[0]["msg"]} in "
-              f"{error.errors()[0]["input"]}")
         sys.exit(1)
     except ValidationError as error:
         print(f"error: {error.errors()[0]["msg"]} in "

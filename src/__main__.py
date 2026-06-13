@@ -1,5 +1,6 @@
 from llm_sdk import Small_LLM_Model  # type: ignore
-from src.parse import get_and_check_inputs, FunctionDefinition, load_json
+from src.parse import get_and_check_inputs, load_json
+from src.pydantic_model import FunctionDefinition
 from src.prompt import get_full_prompt
 from src.constrained import pick_from_options, pick_value
 import json
@@ -39,7 +40,6 @@ def main() -> None:
         fn_name: str = pick_from_options(model, prompt_ids, encoded_functions)
         if fn_name == "add function definition (ಠ_ಠ)":
             break
-        func: FunctionDefinition = None
         for f in functions:
             if f.name == fn_name:
                 func = f
@@ -50,13 +50,14 @@ def main() -> None:
                 value[param] = "!?"
                 continue
             msg = f"Selected function: {fn_name}\n"
-            for k, v in value.items():
-                msg += f"Value of parameter '{k}': {v}\n"
+            for k, val in value.items():
+                msg += f"Value of parameter '{k}': {val}\n"
             p_type: str = func.parameters[param]
             if p_type == "string":
                 msg += f"Value of parameter '{param}' ({p_type}): \""
             else:
-                msg += f"Value of parameter '{param}' ({p_type}), extract exactly as it appears including sign: "
+                msg += f"Value of parameter '{param}' ({p_type}), "
+                msg += "extract exactly as it appears including sign: "
             prompt_ids = model.encode(
                 get_full_prompt(functions, prompt, msg)).flatten().tolist()
             value[param] = pick_value(
@@ -68,8 +69,8 @@ def main() -> None:
         })
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(results, f, indent=2)
+    with open(output_path, "w") as file:
+        json.dump(results, file, indent=2)
 
 
 if __name__ == "__main__":

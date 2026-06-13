@@ -66,7 +66,6 @@ def pick_from_options(
         for name, token_ids in encoded_options.items():
             if token_ids == generated:
                 return name
-        
     return "add function definition (ಠ_ಠ)"
 
 

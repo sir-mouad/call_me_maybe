@@ -2,10 +2,10 @@ from typing import Any
 from pydantic import (
     BaseModel,
     Field,
-    ValidationError,
     model_validator,
     field_validator
 )
+
 
 SUPPORTED_TYPES: set[str] = {"number", "string", "boolean", "integer", "float"}
 

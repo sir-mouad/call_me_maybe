@@ -1,4 +1,4 @@
-from src.parse import FunctionDefinition
+from src.pydantic_model import FunctionDefinition
 
 
 def get_full_prompt(
