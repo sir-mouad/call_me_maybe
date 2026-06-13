@@ -25,7 +25,6 @@ def main() -> None:
     for k, v in vocab.items():
         if k.strip() in "0123456789.-":
             number_tokens.add(v)
-    print(number_tokens)
 
     encoded_functions: dict[str, list[int]] = {}
     for func in functions:
@@ -38,6 +37,8 @@ def main() -> None:
         prompt_ids: list[int] = model.encode(
             get_full_prompt(functions, prompt, msg)).flatten().tolist()
         fn_name: str = pick_from_options(model, prompt_ids, encoded_functions)
+        if fn_name == "add function definition (ಠ_ಠ)":
+            break
         func: FunctionDefinition = None
         for f in functions:
             if f.name == fn_name:
@@ -45,6 +46,9 @@ def main() -> None:
                 break
         value: dict[str, float | int | str | bool] = {}
         for param in func.parameters:
+            if fn_name == "add function definition (ಠ_ಠ)":
+                value[param] = "!?"
+                continue
             msg = f"Selected function: {fn_name}\n"
             for k, v in value.items():
                 msg += f"Value of parameter '{k}': {v}\n"
@@ -52,7 +56,7 @@ def main() -> None:
             if p_type == "string":
                 msg += f"Value of parameter '{param}' ({p_type}): \""
             else:
-                msg += f"Value of parameter '{param}' ({p_type}): "
+                msg += f"Value of parameter '{param}' ({p_type}), extract exactly as it appears including sign: "
             prompt_ids = model.encode(
                 get_full_prompt(functions, prompt, msg)).flatten().tolist()
             value[param] = pick_value(

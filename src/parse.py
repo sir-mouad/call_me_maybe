@@ -73,7 +73,7 @@ def get_and_check_inputs() -> tuple[list[str], list[FunctionDefinition], str]:
     arg_parser.add_argument(
         "--input", default="data/input/function_calling_tests.json")
     arg_parser.add_argument(
-        "--output", default="data/output/function_calls.json")
+        "--output", default="data/output/function_calling_results.json")
     args = arg_parser.parse_args()
 
     try:

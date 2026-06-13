@@ -66,7 +66,8 @@ def pick_from_options(
         for name, token_ids in encoded_options.items():
             if token_ids == generated:
                 return name
-    return str(list(encoded_options.keys())[0])
+        
+    return "add function definition (ಠ_ಠ)"
 
 
 def pick_number(
@@ -92,8 +93,10 @@ def pick_number(
         generated.append(next_token)
         if len(generated) > 20:
             return str(model.decode(generated))
+        if generated[0] == 12 and len(generated) == 1:
+            continue
         try:
-            float(model.decode(generated))
+            print(float(model.decode(generated)))
         except ValueError:
             generated.pop()
             result: str = str(model.decode(generated))
@@ -153,7 +156,7 @@ def pick_value(
     Raises:
         ValueError: If the parameter type is not supported.
     """
-    if param_type == "number":
+    if param_type == "number" or param_type == "float":
         return round(float(pick_number(model, prompt_ids, number_tokens)), 6)
     elif param_type == "string":
         return pick_string(model, prompt_ids, all_token_ids)

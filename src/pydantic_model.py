@@ -7,14 +7,13 @@ from pydantic import (
     field_validator
 )
 
+SUPPORTED_TYPES: set[str] = {"number", "string", "boolean", "integer", "float"}
+
 
 class RequestInput(BaseModel):
     """Pydantic model for validating a single input prompt."""
 
     prompt: str = Field(min_length=1)
-
-
-SUPPORTED_TYPES: set[str] = {"number", "string", "boolean", "integer"}
 
 
 class FunctionDefinition(BaseModel):
