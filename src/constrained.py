@@ -92,10 +92,8 @@ def pick_number(
         generated.append(next_token)
         if len(generated) > 20:
             return str(model.decode(generated))
-        if generated[0] == 12 and len(generated) == 1:
-            continue
         try:
-            print(float(model.decode(generated)))
+            float(model.decode(generated))
         except ValueError:
             generated.pop()
             result: str = str(model.decode(generated))
