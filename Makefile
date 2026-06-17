@@ -1,7 +1,7 @@
 install:
 		uv sync
 run:
-	uv run python -m src
+	time uv run python -m src
 
 debug:
 	uv run python -m pdb -m src
